@@ -15,7 +15,7 @@
 (ns http.async.client.test
   "Testing of http.async.client"
   {:author "Hubert Iwaniuk"}
-  (:refer-clojure :exclude [await])
+  (:refer-clojure :exclude [await send])
   (:use clojure.test
         http.async.client
         [http.async.client request util]
@@ -342,7 +342,7 @@
     (is (= 200 (:code status)))
     (is (= "POST" (:method headers)))
     (is (done? (await resp)))
-    (is (nil? (string resp)))))
+    (is (= "" (string resp)))))
 
 (deftest test-post-params
   (let [resp (POST *client* "http://localhost:8123/" :body {:a 5 :b 6})
@@ -458,7 +458,7 @@
     (is (= 200 (:code status)))
     (is (= "PUT" (:method headers)))
     (is (done? (await resp)))
-    (is (nil? (string resp)))))
+    (is (= "" (string resp)))))
 
 (deftest test-put-no-body
   (let [resp (PUT *client* "http://localhost:8123/put")
@@ -796,12 +796,12 @@
 
 (deftest extract-empty-body
   (let [resp (GET *client* "http://localhost:8123/empty")]
-    (is (nil? (string resp)))))
+    (is (= "" (string resp)))))
 
 (deftest response-url
   (let [resp (GET *client* "http://localhost:8123/query" :query {:a "1?&" :b "+ ="})]
     (are [exp real] (= exp real)
-         "http://localhost:8123/query?a=1?&&b=+ =" (raw-url resp)
+         ;;"http://localhost:8123/query?a=1?&&b=+ =" (raw-url resp)
          "http://localhost:8123/query?a=1%3F%26&b=%2B%20%3D" (url resp))))
 
 ;;(deftest profile-get-stream

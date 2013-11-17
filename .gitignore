@@ -13,3 +13,6 @@ target/
 .lein-deps-sum
 .lein-plugins
 .nrepl*
+.idea
+*.iml
+*.ipr

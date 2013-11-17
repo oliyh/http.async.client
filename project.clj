@@ -1,11 +1,11 @@
-(defproject http.async.client "0.5.3-SNAPSHOT"
+(defproject http.async.client "0.6.0-SNAPSHOT"
   :name             "http.async.client"
   :description      "Asynchronous HTTP Client for Clojure"
   :url              "http://neotyk.github.com/http.async.client/"
   :source-paths ["src/clj"]
   :java-source-paths ["src/jvm"]
-  :dependencies     [[org.clojure/clojure "1.4.0"]
-		     [com.ning/async-http-client "1.7.10"]]
+  :dependencies     [[org.clojure/clojure "1.5.1"]
+                     [com.ning/async-http-client "1.8.1"]]
   :min-lein-version "2.0.0"
   :plugins [[codox "0.6.1"]
             [lein-difftest "1.3.3"

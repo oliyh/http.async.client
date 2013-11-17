@@ -229,7 +229,7 @@
                            error     :error}]
   (let [resp {:id      (gensym "req-id__")
               :url     (.getUrl req)
-              :raw-url (.getRawUrl req)
+              ;;:raw-url (.getRawUrl req)
               :status  (promise)
               :headers (promise)
               :body    (promise)
