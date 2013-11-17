@@ -2,7 +2,8 @@
   "Tests for websocket clients."
   (:require [clojure.test :refer :all]
             [http.async.client :as client]
-            [org.httpkit.server :as h])
+            [org.httpkit.server :as h]
+            [org.httpkit.timer :as timer])
   (:import [com.ning.http.client AsyncHttpClient]
            [java.util.concurrent TimeUnit LinkedBlockingQueue]))
 
@@ -11,19 +12,39 @@
 (def ^:dynamic *server*)
 
 (defn handler [request]
-  (h/with-channel request channel
+  (let [path    (:uri request)
+        key     (get-in request [:headers "sec-websocket-key"])
+        channel (:async-channel request)]
+    (cond
+     
+      ;; Send an invalid Upgrade header
+      (= path "/bad-upgrade-header")
+      (do (.sendHandshake channel
+                          {"Upgrade"              "baloney"
+                           "Connection"           "Upgrade"
+                           "Sec-WebSocket-Accept" (h/accept key)})
+          (h/send! channel "bye" true))
 
-    (h/on-receive channel (fn [message]
-                            (h/send! channel message)))
+      :else
+      (h/with-channel request channel
+        (case path
+        
+          "/echo"
+          (do
+            (h/on-receive channel
+                          (fn [message]
+                            (h/send! channel message))))
 
-    ))
+          "/error"
+          (timer/schedule-task 10 (.serverClose channel 1011))
+
+          )))))
 
 (defn start-server []
   (h/run-server handler {:port 8124}))
 
 
 (defn- once-fixture [f]
-  "Configures Logger before test here are executed, and closes AHC after tests are done."
   (binding [*client* (client/create-client :connection-timeout 1000
                                            :request-timeout    1000)
             *server* (start-server)]
@@ -43,23 +64,23 @@
 (defn- ws-client
   "Helper function for tests."
   [path]
-  (let [m  {:open  (promise)
-            :close (promise)
-            :error (promise)
+  (let [m  {:open  (q)
+            :close (q)
+            :error (q)
             :text  (q)
             :byte  (q)}
         ws (client/websocket *client* (str "ws://localhost:8124" path)
                              :open  (fn [soc]
-                                      (deliver (:open m) soc))
-                             :close (fn [ws code reason]
-                                      (deliver (:close m) [ws code reason]))
-                             :error (fn [ws ex]
-                                      (deliver (:error m) [ws ex]))
+                                      (.add (:open m) soc))
+                             :close (fn [soc code reason]
+                                      (.add (:close m) [soc code reason]))
+                             :error (fn [soc ex]
+                                      (.add (:error m) [soc ex]))
                              :text  (fn [soc t]
-                                      (.offer (:text m) t))
+                                      (.add (:text m) t))
                              :byte  (fn [soc b]
-                                      (.offer (:byte m) b)))]
-    (assoc m :ws ws)))
+                                      (.add (:byte m) b)))]
+    (assoc m :soc ws)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -67,9 +88,45 @@
 
 (use-fixtures :once once-fixture)
 
+(deftest test-lifecycle
+  (testing "open callback gets called"
+    (let [ws  (ws-client "/echo")
+          soc (q-get (:open ws))]
+      (is soc)
+      (is (client/open? soc))
+      (testing "close callback gets called"
+        (client/close (:soc ws))
+        (let [[soc code reason] (q-get (:close ws))]
+          (is (= 1000 code))
+          (is (.startsWith reason "Normal")) ; This is probably overspecifying...
+          ))))
+  
+  (testing "error callback gets called"
+    ;; ...except it doesn't :(
+    ;; TODO - figure out what conditions fire the error callback
+    #_(let [ws  (ws-client "/error")
+            err (q-get (:error ws))]
+        (is err)
+        (let [[soc ex] err]
+          (println "Error:" err)
+          (is (not (client/open? soc)))
+          (is (instance? Exception ex))
+          (is (= "foo" (.getMessage ex))))))
+
+  )
+
 (deftest test-echo
   (testing "simple echo test"
     (let [ws (ws-client "/echo")]
-      (client/send (:ws ws) :text "hello")
+      (client/send (:soc ws) :text "hello")
       (is (= "hello" (q-get (:text ws))))
       )))
+
+(deftest test-text-and-byte-callbacks
+  (testing "Either the text or the byte callback should be called; not both"
+    (let [ws (ws-client "/echo")]
+      (client/send (:soc ws) :text "hey")
+      (let [t (q-get (:text ws))
+            b (q-get (:byte ws))]
+        (is (= "hey" t))
+        (is (nil? b))))))
