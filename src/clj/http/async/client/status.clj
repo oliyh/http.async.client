@@ -15,7 +15,7 @@
 (ns http.async.client.status
   "Asynchronous HTTP Client - Clojure - Lazy status."
   {:author "Hubert Iwaniuk"}
-  (:import (com.ning.http.client HttpResponseStatus)))
+  (:import (org.asynchttpclient HttpResponseStatus)))
 
 (defn convert-status-to-map
   "Convert HTTP Status line to lazy map."

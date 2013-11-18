@@ -20,7 +20,7 @@
         http.async.client
         http.async.client.cert
         [clojure.stacktrace :only [print-stack-trace]])
-  (:import (com.ning.http.client AsyncHttpClient)
+  (:import (org.asynchttpclient AsyncHttpClient)
            (java.security KeyStore)
            (java.security.cert X509Certificate)
            (javax.net.ssl KeyManagerFactory SSLContext)

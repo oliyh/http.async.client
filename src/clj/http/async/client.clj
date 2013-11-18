@@ -21,14 +21,14 @@
   (:use [http.async.client request headers util])
   (:import (java.io ByteArrayOutputStream)
            (java.util.concurrent LinkedBlockingQueue)
-           (com.ning.http.client AsyncHttpClient AsyncHttpClientConfig$Builder)
-           (com.ning.http.client.websocket WebSocket
-                                           WebSocketUpgradeHandler$Builder
-                                           WebSocketListener
-                                           WebSocketByteListener
-                                           WebSocketTextListener
-                                           WebSocketCloseCodeReasonListener)
-           (com.ning.http.client.providers.netty NettyAsyncHttpProviderConfig)))
+           (org.asynchttpclient AsyncHttpClient AsyncHttpClientConfig$Builder)
+           (org.asynchttpclient.websocket WebSocket
+                                          WebSocketUpgradeHandler$Builder
+                                          WebSocketListener
+                                          WebSocketByteListener
+                                          WebSocketTextListener
+                                          WebSocketCloseCodeReasonListener)
+           (org.asynchttpclient.providers.netty NettyAsyncHttpProviderConfig)))
 
 ;; # Client Lifecycle
 
@@ -93,11 +93,7 @@
       (when max-conns-per-host (.setMaximumConnectionsPerHost b max-conns-per-host))
       (when max-conns-total (.setMaximumConnectionsTotal b max-conns-total))
       (when max-redirects (.setMaximumNumberOfRedirects b max-redirects))
-      (when async-connect
-        (let [provider-config (doto (NettyAsyncHttpProviderConfig.)
-                                (.removeProperty NettyAsyncHttpProviderConfig/USE_BLOCKING_IO)
-                                (.addProperty NettyAsyncHttpProviderConfig/EXECUTE_ASYNC_CONNECT true))]
-          (.setAsyncHttpClientProviderConfig b provider-config)))
+      (when async-connect (.setAsyncConnectMode b (boolean async-connect)))
       (when executor-service (.setExecutorService b executor-service))
       (when proxy
         (set-proxy proxy b))

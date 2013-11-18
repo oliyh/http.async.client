@@ -5,7 +5,7 @@
   :source-paths ["src/clj"]
   :java-source-paths ["src/jvm"]
   :dependencies     [[org.clojure/clojure "1.4.0"]
-		     [com.ning/async-http-client "1.7.10"]]
+		     [org.asynchttpclient/async-http-client-netty-provider "2.0.0-SNAPSHOT"]]
   :min-lein-version "2.0.0"
   :plugins [[codox "0.6.1"]
             [lein-difftest "1.3.3"

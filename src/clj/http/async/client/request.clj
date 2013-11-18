@@ -18,13 +18,12 @@
   (:use [http.async.client status headers util part]
         [clojure.stacktrace]
         [clojure.string :only [join]])
-  (:import (com.ning.http.client AsyncHttpClient AsyncHttpClientConfig$Builder
-                                 AsyncHandler Cookie
-                                 FluentCaseInsensitiveStringsMap
-				 HttpResponseStatus HttpResponseHeaders
-				 HttpResponseBodyPart
-                                 PerRequestConfig
-                                 Request RequestBuilder)
+  (:import (org.asynchttpclient AsyncHttpClient AsyncHttpClientConfig$Builder
+                                AsyncHandler Cookie
+                                FluentCaseInsensitiveStringsMap
+                                HttpResponseStatus HttpResponseHeaders
+                                HttpResponseBodyPart
+                                Request RequestBuilder)
            (ahc RequestBuilderWrapper)
            (java.net URLEncoder)
            (java.io File
@@ -183,19 +182,17 @@
       (set-proxy proxy rbw))
     ;; request timeout
     (when timeout
-      (let [prc (PerRequestConfig.)]
-        (.setRequestTimeoutInMs prc timeout)
-        (.setPerRequestConfig rbw prc)))
+      (.setTimeout rbw timeout))
     ;; fine
     (.. (.getRequestBuilder rbw) (setUrl url) (build))))
 
 (defn convert-action
   "Converts action (:abort, nil) to Async client STATE."
   [action]
-  {:tag com.ning.http.client.AsyncHandler$STATE}
+  {:tag org.asynchttpclient.AsyncHandler$STATE}
   (if (= action :abort)
-    com.ning.http.client.AsyncHandler$STATE/ABORT
-    com.ning.http.client.AsyncHandler$STATE/CONTINUE))
+    org.asynchttpclient.AsyncHandler$STATE/ABORT
+    org.asynchttpclient.AsyncHandler$STATE/CONTINUE))
 
 (defn execute-request
   "Executes provided request.
@@ -229,7 +226,7 @@
                            error     :error}]
   (let [resp {:id      (gensym "req-id__")
               :url     (.getUrl req)
-              :raw-url (.getRawUrl req)
+              ;;:raw-url (.getRawUrl req)
               :status  (promise)
               :headers (promise)
               :body    (promise)
@@ -239,21 +236,21 @@
         (.executeRequest
          client req
          (reify AsyncHandler
-           (^{:tag com.ning.http.client.AsyncHandler$STATE}
+           (^{:tag org.asynchttpclient.AsyncHandler$STATE}
             onStatusReceived [this #^HttpResponseStatus e]
             (let [[result action] ((or status
                                        (:status *default-callbacks*))
                                    resp (convert-status-to-map e))]
               (deliver (:status resp) result)
               (convert-action action)))
-           (^{:tag com.ning.http.client.AsyncHandler$STATE}
+           (^{:tag org.asynchttpclient.AsyncHandler$STATE}
             onHeadersReceived [this #^HttpResponseHeaders e]
             (let [[result action] ((or headers
                                        (:headers *default-callbacks*))
                                    resp (convert-headers-to-map e))]
               (deliver (:headers resp) result)
               (convert-action action)))
-           (^{:tag com.ning.http.client.AsyncHandler$STATE}
+           (^{:tag org.asynchttpclient.AsyncHandler$STATE}
             onBodyPartReceived [this #^HttpResponseBodyPart e]
             (when-let [bytes (.getBodyPartBytes e)]
               (let [baos (ByteArrayOutputStream. (alength bytes))]

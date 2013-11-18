@@ -2,12 +2,11 @@ package ahc;
 
 import java.io.File;
 import java.io.InputStream;
-import com.ning.http.client.Realm;
-import com.ning.http.client.RequestBuilder;
-import com.ning.http.client.PerRequestConfig;
-import com.ning.http.client.ProxyServer;
-import com.ning.http.client.Cookie;
-import com.ning.http.client.generators.InputStreamBodyGenerator;
+import org.asynchttpclient.Realm;
+import org.asynchttpclient.RequestBuilder;
+import org.asynchttpclient.ProxyServer;
+import org.asynchttpclient.Cookie;
+import org.asynchttpclient.generators.InputStreamBodyGenerator;
 
 public class RequestBuilderWrapper {
     private RequestBuilder rb;
@@ -42,7 +41,7 @@ public class RequestBuilderWrapper {
     public RequestBuilderWrapper setRealm(Realm realm) {
         rb.setRealm(realm);
         return this;}
-    public RequestBuilderWrapper setPerRequestConfig(PerRequestConfig perRequestConfig) {
-        rb.setPerRequestConfig(perRequestConfig);
+    public RequestBuilderWrapper setTimeout(int timeout) {
+        rb.setRequestTimeoutInMs(timeout);
         return this;}
     public RequestBuilder getRequestBuilder() { return rb; }}

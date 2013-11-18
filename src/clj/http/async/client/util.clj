@@ -15,10 +15,10 @@
 (ns http.async.client.util
   "Asynchronous HTTP Client - Clojure - Utils"
   {:author "Hubert Iwaniuk"}
-  (:import (com.ning.http.client ProxyServer
-                                 ProxyServer$Protocol
-                                 Realm$AuthScheme
-                                 Realm$RealmBuilder)))
+  (:import (org.asynchttpclient ProxyServer
+                                ProxyServer$Protocol
+                                Realm$AuthScheme
+                                Realm$RealmBuilder)))
 
 (defn- proto-map [proto]
   (if proto

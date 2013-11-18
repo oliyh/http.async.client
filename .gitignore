@@ -12,3 +12,4 @@ target/
 /.lein-failures
 .lein-deps-sum
 .lein-plugins
+.nrepl*

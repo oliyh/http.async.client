@@ -17,9 +17,9 @@
   {:author "Hubert Iwaniuk"}
   (:use clojure.test
         http.async.client.part)
-  (:import (com.ning.http.client ByteArrayPart
-                                 FilePart
-                                 StringPart)
+  (:import (org.asynchttpclient ByteArrayPart
+                                FilePart
+                                StringPart)
            (java.io File)))
 
 (set! *warn-on-reflection* true)
