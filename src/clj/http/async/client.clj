@@ -319,12 +319,11 @@
 
 (defn send
   "Send message via WebSocket."
-  [ws & {text :text
-         byte :byte}]
-  (when (satisfies? IWebSocket ws)
-    (if text
-      (-sendText ws text)
-      (-sendByte ws byte))))
+  [ws frame-type data]
+  (case frame-type
+    :text (-sendText ws data)
+    :byte (-sendByte ws data)
+    (throw (IllegalArgumentException. (str "Invalid frame type - must be :text or :byte. Got " frame-type)))))
 
 (defn ws-lifecycle-listener
   "Registers WebSocketListener to handle lifecycle of WebSocket.

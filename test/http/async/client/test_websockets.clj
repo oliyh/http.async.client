@@ -125,8 +125,31 @@
 (deftest test-text-and-byte-callbacks
   (testing "Either the text or the byte callback should be called; not both"
     (let [ws (ws-client "/echo")]
-      (client/send (:soc ws) :text "hey")
-      (let [t (q-get (:text ws))
-            b (q-get (:byte ws))]
-        (is (= "hey" t))
-        (is (nil? b))))))
+      (testing "text handler"
+        (client/send (:soc ws) :text "hey")
+        (let [t (q-get (:text ws))
+              b (q-get (:byte ws))]
+          (is (= "hey" t))
+          (is (nil? b))))
+      (testing "bytes handler"
+        (let [bytes-sent (.getBytes "banana" "utf-8")]
+          (client/send (:soc ws) :byte bytes-sent)
+          (let [t (q-get (:text ws))
+                b (q-get (:byte ws))]
+            (is (nil? t))
+            (is (= (type bytes-sent) (type b)))
+            (is (= (seq bytes-sent) (seq b)))))))))
+
+(deftest test-invalid-args
+  (testing "send should throw on bad input"
+    (let [ws  (ws-client "/echo")
+          soc (:soc ws)]
+      (is (thrown-with-msg? IllegalArgumentException #":text or :byte"
+                            (client/send soc :bytes "foo")))
+      (are [t d] (thrown? ClassCastException (client/send soc t d))
+           :byte "foo"
+           :text (.getBytes "foo")
+           :text {:foo "bar"})
+      (is (thrown? Exception (client/send {} :text "yo")))
+      (is (thrown? Exception (client/send nil :text "hi")))
+      )))
