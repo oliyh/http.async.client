@@ -15,7 +15,7 @@
               :dependencies
               [[org.eclipse.jetty/jetty-server "7.1.4.v20100610"]
                [org.eclipse.jetty/jetty-security "7.1.4.v20100610"]
-               [http-kit "2.1.13"]
+               [http-kit "2.1.16"]
                [log4j "1.2.13"]
                [org.slf4j/slf4j-log4j12 "1.6.4"]]}}
   ;; :repositories {"snapshots" "http://oss.sonatype.org/content/repositories/snapshots/"}

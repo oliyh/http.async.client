@@ -36,7 +36,11 @@
                             (h/send! channel message))))
 
           "/error"
-          (timer/schedule-task 10 (.serverClose channel 1011))
+          (timer/schedule-task 1 (.serverClose channel 1011))
+
+          "/close-me"
+          ;; I'm not sure why the timer is neccesary - http-kit bug?
+          (timer/schedule-task 1 (h/send! channel "closing" true))
 
           )))))
 
@@ -112,6 +116,26 @@
           (is (not (client/open? soc)))
           (is (instance? Exception ex))
           (is (= "foo" (.getMessage ex))))))
+
+  (testing "close callback gets called when socket closed by server"
+    (let [ws  (ws-client "/close-me")
+          soc (q-get (:open ws))]
+      (let [[soc code reason] (q-get (:close ws))]
+        (is (= 1000 code)))))
+
+  (testing "client receives text frame and then close frame"
+    (let [ws  (ws-client "/close-me")
+          soc (q-get (:open ws))]
+      (is (= "closing" (q-get (:text ws))))
+
+      ;; WTF???
+      (let [wtf (q-get (:text ws))]
+        (is (nil? wtf))
+        (when wtf
+          (println "Got mysterious text data: " wtf " , bytes: " (seq (.getBytes wtf)))))
+      
+      (let [[soc code reason] (q-get (:close ws))]
+        (is (= 1000 code)))))
 
   )
 
